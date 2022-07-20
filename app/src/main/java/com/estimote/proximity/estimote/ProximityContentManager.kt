@@ -39,12 +39,12 @@ class ProximityContentManager(private val context: Context) {
                 for (context in contexts) {
                     val title: String = context.attachments["pokus-gsg/title"] ?: "unknown"
                     val subtitle = Utils.getShortIdentifier(context.deviceId)
-                    var output: String = context.attachments["type"] ?: "unknown"
-                    if (output == "type"){
-                        output = "Entered through the doors!"
+                    var type: String = context.attachments["type"] ?: "unknown"
+                    if (type == "door"){
+                        type = "Entered through the doors!"
                     }
-                    nearbyContent.add(ProximityContent(title, subtitle, output))
-                    print(ProximityContent(title, subtitle, output))
+                    nearbyContent.add(ProximityContent(title, subtitle, type))
+                    print(ProximityContent(title, subtitle, type))
                 }
                 (context as MainActivity).setNearbyContent(nearbyContent)
             }
