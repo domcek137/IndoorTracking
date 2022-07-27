@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Chronometer;
 import android.widget.ListView;
 
 
@@ -55,13 +56,19 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements ASScannerCallback,ASConDeviceCallback,ASEDSTCallback, ASiBeaconCallback, ASGlobalCallback {
 
     public static final int REQUEST_CODE_PICK_ACCOUNT = 1000;
     public static final int SCOPE_USERLOCATION    =  0;
     public static final int SCOPE_CLOUDPLATFORM   =  1;
+    public static final double DISTANCE_ALG_N = 6d;
+    public static final double DISTANCE_ALG_MEASURED_POWER = -65;
+    private static final int DISTANCE_ITERATION_COUNT = 4;
 
     private List<String> scannedDeivcesList;
     private ArrayAdapter<String> adapter;
@@ -77,6 +84,17 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
 
     static ProgressDialog connDialog;
     private static String TAG = "MainActivity";
+
+    private double distance = 0;
+    private double roundUp = 0;
+    private double[] rssiValues = new double[DISTANCE_ITERATION_COUNT];
+    private int iteration = 0;
+    private String nearMe = "...";
+
+
+    int secondsPassed = 0;
+    int minutesPassed = 0;
+    int myFirstTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -315,7 +333,7 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
                 //Device already added
                 contains = true;
                 //Replace the device with updated values in that position
-                scannedDeivcesList.set(i,result.getRssi() + " RSSI         " + getDistance(result)+ "m" + "  "+result.getDevice().getName()+ "\n       ("+result.getDevice().getAddress()+")");
+                scannedDeivcesList.set(i,result.getRssi() + " RSSI         " + getDistance(result)+ "m" + "  "+result.getDevice().getName()+ "\n       ("+result.getDevice().getAddress()+")" + isNearMe()+ "               "+ "Time shitting... "+ minutesPassed + "min   " + secondsPassed + "sec");
                 break;
             }
         }
@@ -323,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
         if(!contains ){
             //Scanned device not found in the list. NEW => add to list
 
-            scannedDeivcesList.add(result.getRssi() + " RSSI         " + getDistance(result)+ "m" + "  "+result.getDevice().getName()+ "\n       ("+result.getDevice().getAddress()+")");
+            scannedDeivcesList.add(result.getRssi() + " RSSI         " + getDistance(result)+ "m" + "  "+result.getDevice().getName()+ "\n       ("+result.getDevice().getAddress()+")" + isNearMe()+ "             "+ "Time shitting... "+ minutesPassed + "min   " + secondsPassed + "sec");
         }
 
         //After modify the list, notify the adapter that changes have been made so it updates the UI.
@@ -359,10 +377,6 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
                 Log.i(TAG,result.getDevice().getName()+" - UID - "+logstr);
                 break;
             case ASUtils.TYPE_EDDYSTONE_URL:
-                Log.i(TAG, "distance:  " +getDistance(result));
-
-                //bacha na minusove cisla
-
                 /**** Example to get data from advertising ***
                  advData = ASResultParser.getDataFromAdvertising(result);
                  try {
@@ -656,8 +670,49 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
     }
     //creates distance
     public double getDistance(ScanResult result){
-        float distance = 10^(((-57)-(result.getRssi()))/(10*4));
-        return distance ;
+        if( iteration < DISTANCE_ITERATION_COUNT )  {
+            rssiValues[iteration] = (double)result.getRssi();
+            iteration++;
+        } else {
+            myFirstTime++;
+            iteration = 0;
+            double sumRssi = 0, averageRssi = 0;
+            Log.i(TAG, "RSSI values: " + Arrays.toString(rssiValues));
+            for ( double rssi : rssiValues ) {
+               sumRssi += rssi;
+            }
+            averageRssi = sumRssi/DISTANCE_ITERATION_COUNT;
+            distance = Math.pow(10d, ((DISTANCE_ALG_MEASURED_POWER -(averageRssi))/(10* DISTANCE_ALG_N)));
+            Log.i(TAG,"Average RSSI:  "+ averageRssi +"   Precise distance:  " +distance);
+            roundUp = Math.round(distance * 2) / 2.0;
+        }
+        return roundUp ;
     }
+    public String isNearMe() {
+        if (roundUp < 2) {
+            Runnable objRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Thread.sleep(1000);
+                        if (secondsPassed < 59 && myFirstTime != 0) {
+                            secondsPassed++;
+                        }else if (myFirstTime != 0) {
+                            secondsPassed = 0;
+                            minutesPassed++;
+                        }
+                    } catch (InterruptedException e) {
+                    }
+                }
+            };
 
+            Thread objBgThread = new Thread(objRunnable);
+            objBgThread.start();
+
+            nearMe = " Near me";
+        }else {
+            nearMe = " Far from me";
+        }
+        return nearMe;
+    }
 }
