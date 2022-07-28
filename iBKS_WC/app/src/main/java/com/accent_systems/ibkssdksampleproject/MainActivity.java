@@ -1,4 +1,5 @@
 package com.accent_systems.ibkssdksampleproject;
+
 import android.Manifest;
 import android.accounts.AccountManager;
 import android.annotation.TargetApi;
@@ -14,20 +15,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Chronometer;
 import android.widget.ListView;
 
-
 import com.accent_systems.ibks_sdk.EDSTService.ASEDSTCallback;
-import com.accent_systems.ibks_sdk.EDSTService.ASEDSTDefs;
 import com.accent_systems.ibks_sdk.EDSTService.ASEDSTService;
 import com.accent_systems.ibks_sdk.EDSTService.ASEDSTSlot;
 import com.accent_systems.ibks_sdk.GlobalService.ASGlobalCallback;
@@ -58,8 +56,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+
+
 
 public class MainActivity extends AppCompatActivity implements ASScannerCallback,ASConDeviceCallback,ASEDSTCallback, ASiBeaconCallback, ASGlobalCallback {
 
@@ -92,9 +90,9 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
     private String nearMe = "...";
 
 
-    int secondsPassed = 0;
-    int minutesPassed = 0;
-    int myFirstTime = 0;
+    static int secondsPassed = 0;
+    static int minutesPassed = 0;
+    static int myFirstTime = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -318,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
 
     @Override
     public void scannedBleDevices(ScanResult result){
-        if (ASResultParser.getAdvertisingType(result) == ASUtils.TYPE_UNKNOWN ){
+        if (ASResultParser.getAdvertisingType(result) != ASUtils.TYPE_EDDYSTONE_UID || result.getDevice().getName() == null){
             return;
         }
 
@@ -690,29 +688,31 @@ public class MainActivity extends AppCompatActivity implements ASScannerCallback
     }
     public String isNearMe() {
         if (roundUp < 2) {
-            Runnable objRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Thread.sleep(1000);
-                        if (secondsPassed < 59 && myFirstTime != 0) {
-                            secondsPassed++;
-                        }else if (myFirstTime != 0) {
-                            secondsPassed = 0;
-                            minutesPassed++;
-                        }
-                    } catch (InterruptedException e) {
-                    }
-                }
-            };
-
-            Thread objBgThread = new Thread(objRunnable);
-            objBgThread.start();
-
+            new Stopwatch();
             nearMe = " Near me";
         }else {
             nearMe = " Far from me";
         }
         return nearMe;
     }
+}
+class Stopwatch {
+    Runnable objRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(950);
+                if (MainActivity.secondsPassed < 59 && MainActivity.myFirstTime != 0) {
+                    MainActivity.secondsPassed++;
+                }else if (MainActivity.myFirstTime != 0) {
+                    MainActivity.secondsPassed = 0;
+                    MainActivity.minutesPassed++;
+                }
+            } catch (InterruptedException e) {
+            }
+        }
+    };
+
+    Thread objBgThread = new Thread(objRunnable);
+    objBgThread.start();
 }
