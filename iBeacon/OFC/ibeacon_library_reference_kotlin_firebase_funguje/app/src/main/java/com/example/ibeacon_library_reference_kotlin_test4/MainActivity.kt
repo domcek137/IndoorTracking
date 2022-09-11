@@ -13,17 +13,23 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
-import com.google.firebase.database.ktx.getValue
 import com.google.firebase.ktx.Firebase
 import org.altbeacon.beacon.Beacon
 import org.altbeacon.beacon.BeaconManager
 import org.altbeacon.beacon.MonitorNotifier
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.TimeSource
 
 class MainActivity : AppCompatActivity() {
+    var events: Int = 0
+    var x: Int = 0
+    //var localDate: LocalDate = LocalDate.now()
+    //var localTime: LocalTime = LocalTime.now()
     var value = null
     val database = Firebase.database
     val myRef = database.getReference("Beacons")
@@ -34,7 +40,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var beaconReferenceApplication: BeaconReferenceApplication
     var alertDialog: AlertDialog? = null
     var neverAskAgainPermissions = ArrayList<String>()
-    public var myBoolean: Boolean = false
+    var myBoolean: Boolean = false
+    var nearMe: Boolean = false
+
+    @OptIn(ExperimentalTime::class)
+    abstract class AbstractDoubleTimeSource : TimeSource
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,7 +108,7 @@ class MainActivity : AppCompatActivity() {
             beaconListView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1,
                 beacons
                     .sortedBy { it.distance }
-                    .map { "${it.id1}\nid2: ${it.id2} id3:  rssi: ${it.rssi}\n ${sendInformation(it.id1.toString(),it.rssi,it.distance)}est. distance: ${it.distance} m" }.toTypedArray())
+                    .map { "${it.id1}\nid2: ${it.id2} id3:  rssi: ${it.rssi}\n ${sendInformation(it.id1.toString(),it.rssi,it.distance, Instant.now())}est. distance: ${it.distance} m" }.toTypedArray())
         }
     }
 
@@ -314,16 +325,29 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG,"sme skoro tam ${myBoolean}")
     }
 
-    fun sendInformation(id1: String, rssi: Int,distance: Double) {
-
+    fun sendInformation(id1: String, rssi: Int,distance: Double, UTCtime: Instant) {
         if (myBoolean){
             myRef.child(id1).child("RSSI").setValue(rssi)
             myRef.child(id1).child("distance").setValue(distance)
             if (distance < 1.5){
-                myRef.child(id1).child("near me").setValue("true")
+                if (x == 0){
+                    x = 1
+                    myRef.child(id1).child("events").child("event").child(events.toString()).child("start").setValue(UTCtime)// print start time
+                }
+                Log.i(TAG,"start time $x")
+                nearMe = true
+                myRef.child(id1).child("near_me").setValue(nearMe)
             }else{
-                myRef.child(id1).child("near me").setValue("false")
+                if (x == 1){
+                    myRef.child(id1).child("events").child("event").child(events.toString()).child("stop").setValue(UTCtime)// print end time
+                    x = 0
+                    events ++
+                }
+                Log.i(TAG,"end time $x")
+                nearMe = false
+                myRef.child(id1).child("near_me").setValue(nearMe)
             }
+
 
         }
     }
