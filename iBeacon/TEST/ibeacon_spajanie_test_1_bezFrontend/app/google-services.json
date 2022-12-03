@@ -1,0 +1,83 @@
+{
+  "project_info": {
+    "project_number": "572221328893",
+    "firebase_url": "https://beacons-37aad-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "beacons-37aad",
+    "storage_bucket": "beacons-37aad.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:572221328893:android:d0717bf9039d2be3825d94",
+        "android_client_info": {
+          "package_name": "com.example.ibeacon_library_reference_kotlin_test4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "572221328893-ulqelef8k4224jrf1576u5j6fu2rhlje.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHD6qmdC_uw3cAZv3s_XZHJZ0Iym_GEuI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "572221328893-ulqelef8k4224jrf1576u5j6fu2rhlje.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "572221328893-cfse7n81f6vesot6gddbvpn10rtbi44h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.project1Cmpt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:572221328893:android:40c4bf7f9be696d5825d94",
+        "android_client_info": {
+          "package_name": "com.example.project1Cmpt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "572221328893-ulqelef8k4224jrf1576u5j6fu2rhlje.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHD6qmdC_uw3cAZv3s_XZHJZ0Iym_GEuI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "572221328893-ulqelef8k4224jrf1576u5j6fu2rhlje.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "572221328893-cfse7n81f6vesot6gddbvpn10rtbi44h.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.project1Cmpt"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

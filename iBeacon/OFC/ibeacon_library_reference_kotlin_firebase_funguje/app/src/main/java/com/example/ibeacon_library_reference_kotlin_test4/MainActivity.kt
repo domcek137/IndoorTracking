@@ -13,6 +13,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
+import com.google.firebase.database.*
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import org.altbeacon.beacon.Beacon
@@ -26,8 +27,12 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 
 class MainActivity : AppCompatActivity() {
-    var events: Int = 0
-    var x: Int = 0
+    var stopTime: String = "null"
+    var startTime: String = "null"
+    var stateMap = HashMap<String, Boolean>()
+    var eventMap = HashMap<String, Int>()
+    private var firebaseDataBase: FirebaseDatabase? = null
+    private var databaseReference: DatabaseReference? = null
     //var localDate: LocalDate = LocalDate.now()
     //var localTime: LocalTime = LocalTime.now()
     var value = null
@@ -64,6 +69,10 @@ class MainActivity : AppCompatActivity() {
         beaconCountTextView = findViewById<TextView>(R.id.beaconCount)
         beaconCountTextView.text = "No beacons detected"
         beaconListView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, arrayOf("--"))
+
+        firebaseDataBase = FirebaseDatabase.getInstance()
+        databaseReference = firebaseDataBase?.getReference()
+
     }
 
     override fun onPause() {
@@ -111,6 +120,7 @@ class MainActivity : AppCompatActivity() {
                     .map { "${it.id1}\nid2: ${it.id2} id3:  rssi: ${it.rssi}\n ${sendInformation(it.id1.toString(),it.rssi,it.distance, Instant.now())}est. distance: ${it.distance} m" }.toTypedArray())
         }
     }
+
 
     fun rangingButtonTapped(view: View) {
         val beaconManager = BeaconManager.getInstanceForApplication(this)
@@ -320,35 +330,63 @@ class MainActivity : AppCompatActivity() {
         val PERMISSION_REQUEST_FINE_LOCATION = 3
     }
 
+    /*
+    fun readInformation(id1: String, events: String){
+        myRef.child(id1).child("events").child("event").child(events).child("stop").child("epochSecond").get().addOnSuccessListener {
+            stopTime = it.value.toString()
+            Log.i("firebase", "Got value ${stopTime}")
+        }.addOnFailureListener{
+            Log.e("firebase", "Error getting data", it)
+        }
+
+        myRef.child(id1).child("events").child("event").child(events).child("start").child("epochSecond").get().addOnSuccessListener {
+            startTime = it.value.toString()
+            Log.i("firebase", "Got value ${startTime}")
+        }.addOnFailureListener{
+            Log.e("firebase", "Error getting data", it)
+        }
+
+    }
+    */
+
+
+    fun sendInformation(id1: String, rssi: Int,distance: Double, UTCtime: Instant) {
+        if (eventMap[id1] != null) {
+            if (myBoolean){
+                myRef.child(id1).child("RSSI").setValue(rssi)
+                myRef.child(id1).child("distance").setValue(distance)
+                //readInformation(id1, events.toString())
+                var events = eventMap[id1]
+                var state = stateMap[id1]
+                if (distance < 1.5){
+                    if ( state==null || !state ){
+                        stateMap[id1] = true
+                        myRef.child(id1).child("events").child("event").child(events.toString()).child("start").setValue(UTCtime)// print start time
+                    }
+                    Log.i(TAG,"start time $state")
+                    nearMe = true
+                    myRef.child(id1).child("near_me").setValue(nearMe)
+                }else{
+                    if (state!=null && state){
+                        myRef.child(id1).child("events").child("event").child(events.toString()).child("stop").setValue(UTCtime)// print end time
+                        stateMap[id1] = false
+                        if (events != null) {
+                            eventMap[id1] = events + 1
+                        }
+                        Log.i(TAG,"uz sa mi nechce ${eventMap[id1]}")
+                    }
+                    Log.i(TAG,"end time $state")
+                    nearMe = false
+                    myRef.child(id1).child("near_me").setValue(nearMe)
+                    }
+                }
+            }else{
+                eventMap[id1] = 0
+        }
+    }
+
     fun rssiButtonTapped(view: View) {
         myBoolean = true
         Log.i(TAG,"sme skoro tam ${myBoolean}")
-    }
-
-    fun sendInformation(id1: String, rssi: Int,distance: Double, UTCtime: Instant) {
-        if (myBoolean){
-            myRef.child(id1).child("RSSI").setValue(rssi)
-            myRef.child(id1).child("distance").setValue(distance)
-            if (distance < 1.5){
-                if (x == 0){
-                    x = 1
-                    myRef.child(id1).child("events").child("event").child(events.toString()).child("start").setValue(UTCtime)// print start time
-                }
-                Log.i(TAG,"start time $x")
-                nearMe = true
-                myRef.child(id1).child("near_me").setValue(nearMe)
-            }else{
-                if (x == 1){
-                    myRef.child(id1).child("events").child("event").child(events.toString()).child("stop").setValue(UTCtime)// print end time
-                    x = 0
-                    events ++
-                }
-                Log.i(TAG,"end time $x")
-                nearMe = false
-                myRef.child(id1).child("near_me").setValue(nearMe)
-            }
-
-
-        }
     }
 }
