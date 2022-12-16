@@ -16,6 +16,9 @@ import org.altbeacon.beacon.Beacon
 import org.altbeacon.beacon.BeaconManager
 import org.altbeacon.beacon.MonitorNotifier
 import java.time.Instant
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.time.ExperimentalTime
 import kotlin.time.TimeSource
 
@@ -242,14 +245,14 @@ class MainActivity: FlutterActivity() {
 
             if (distance < 1.5){
                 if (stateIsClose==null || stateIsClose) {
-                    myRef.child(id1).child("events").child("event").child(events.toString())
+                    myRef.child(id1).child("events").child(UUID.randomUUID().toString())
                         .child("start").setValue(UTCtime)// print start time
                 }
                 stateIsCloseMap[id1] = false
                 myRef.child(id1).child("near_me").setValue(true)
             }else{
                 if (stateIsClose==null || !stateIsClose) {
-                    myRef.child(id1).child("events").child("event").child(events.toString())
+                    myRef.child(id1).child("events").child(UUID.randomUUID().toString())
                         .child("stop").setValue(UTCtime)// print end time
                     if (events != null) {
                         eventMap[id1] = events + 1

@@ -86,23 +86,7 @@ class BeaconReferenceApplication: Application() {
         regionViewModel.rangedBeacons.observeForever( centralRangingObserver)
     }
 
-    fun setupForegroundService() {
-        val builder = Notification.Builder(this, "BeaconReferenceApp")
-        builder.setContentTitle("Scanning for Beacons")
-        val intent = Intent(this, MainActivity::class.java)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE
-        )
-        builder.setContentIntent(pendingIntent);
-        val channel =  NotificationChannel("beacon-ref-notification-id",
-            "My Notification Name", NotificationManager.IMPORTANCE_DEFAULT)
-        channel.setDescription("My Notification Channel Description")
-        val notificationManager =  getSystemService(
-            Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel);
-        builder.setChannelId(channel.getId());
-        BeaconManager.getInstanceForApplication(this).enableForegroundServiceScanning(builder.build(), 456)
-    }
+
 
     val centralMonitoringObserver = Observer<Int> { state ->
         if (state == MonitorNotifier.OUTSIDE) {
@@ -110,7 +94,6 @@ class BeaconReferenceApplication: Application() {
         }
         else {
             Log.d(TAG, "inside beacon region: "+region)
-            sendNotification()
         }
     }
 
@@ -121,21 +104,6 @@ class BeaconReferenceApplication: Application() {
         }
     }
 
-    private fun sendNotification() {
-        val builder = NotificationCompat.Builder(this, "beacon-ref-notification-id")
-            .setContentTitle("Beacon Reference Application")
-            .setContentText("A beacon is nearby.")
-        val stackBuilder = TaskStackBuilder.create(this)
-        stackBuilder.addNextIntent(Intent(this, MainActivity::class.java))
-        val resultPendingIntent = stackBuilder.getPendingIntent(
-            0,
-            PendingIntent.FLAG_UPDATE_CURRENT + PendingIntent.FLAG_IMMUTABLE
-        )
-        builder.setContentIntent(resultPendingIntent)
-        val notificationManager =
-            this.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(1, builder.build())
-    }
 
     companion object {
         val TAG = "BeaconReference"
