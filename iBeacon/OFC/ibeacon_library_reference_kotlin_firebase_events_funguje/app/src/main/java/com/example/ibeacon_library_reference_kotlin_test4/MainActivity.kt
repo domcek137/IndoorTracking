@@ -11,6 +11,7 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
 import android.widget.TextView
+import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import com.google.firebase.database.ktx.database
@@ -27,7 +28,7 @@ class MainActivity : AppCompatActivity() {
     var eventMap : HashMap<String, Int> = HashMap()
     var value = null
     val database = Firebase.database
-    val myRef = database.getReference("Beacons")
+    val myRef = database.getReference("Test_Dominik")
     lateinit var beaconListView: ListView
     lateinit var beaconCountTextView: TextView
     lateinit var monitoringButton: Button
@@ -36,6 +37,9 @@ class MainActivity : AppCompatActivity() {
     var alertDialog: AlertDialog? = null
     var neverAskAgainPermissions = ArrayList<String>()
     var myBoolean: Boolean = false
+    var MyID: String = "null"
+
+
 
     @OptIn(ExperimentalTime::class)
     abstract class AbstractDoubleTimeSource : TimeSource
@@ -45,6 +49,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         beaconReferenceApplication = application as BeaconReferenceApplication
+
+        val mId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        MyID = mId
 
         // Set up a Live Data observer for beacon data
         val regionViewModel = BeaconManager.getInstanceForApplication(this).getRegionViewModel(beaconReferenceApplication.region)
@@ -325,22 +332,22 @@ class MainActivity : AppCompatActivity() {
             if (eventMap[id1] == null){
                 eventMap[id1] = 0
             }
-            myRef.child(id1).child("RSSI").setValue(rssi)
-            myRef.child(id1).child("distance").setValue(distance)
+            myRef.child(MyID).child(id1).child("RSSI").setValue(rssi)
+            myRef.child(MyID).child(id1).child("distance").setValue(distance)
             var stateIsClose = stateIsCloseMap[id1]
             var events = eventMap[id1]
             Log.i(TAG,"hashmap $stateIsClose")
 
             if (distance < 1.5){
                 if (stateIsClose==null || stateIsClose) {
-                    myRef.child(id1).child("events").child("event").child(events.toString())
+                    myRef.child(MyID).child(id1).child("events").child("event").child(events.toString())
                         .child("start").setValue(UTCtime)// print start time
                 }
                 stateIsCloseMap[id1] = false
-                myRef.child(id1).child("near_me").setValue(true)
+                myRef.child(MyID).child(id1).child("near_me").setValue(true)
             }else{
                 if (stateIsClose==null || !stateIsClose) {
-                    myRef.child(id1).child("events").child("event").child(events.toString())
+                    myRef.child(MyID).child(id1).child("events").child("event").child(events.toString())
                         .child("stop").setValue(UTCtime)// print end time
                     if (events != null) {
                         eventMap[id1] = events + 1
@@ -348,7 +355,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 stateIsCloseMap[id1] = true
 
-                myRef.child(id1).child("near_me").setValue(false)
+                myRef.child(MyID).child(id1).child("near_me").setValue(false)
             }
         }
     }
